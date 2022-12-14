@@ -5,11 +5,6 @@ from solitaire.constants.card_constants import *
 from solitaire.sprites.card_sprites import *
 import arcade
 
-# Screen title and size
-SCREEN_WIDTH = 1024
-SCREEN_HEIGHT = 768
-SCREEN_TITLE = "Drag and Drop Cards"
-
 
 class MyGame(arcade.Window):
     """ Main application class. """
@@ -29,6 +24,9 @@ class MyGame(arcade.Window):
         # in case they have to go back
         self.held_cards_original_position = None
 
+        # Sprite list with all the mats for the cards to lay on
+        self.pile_mat_list = None
+
     def setup(self):
         """ Set up the game here. Call this function to restart the game. """
 
@@ -38,6 +36,33 @@ class MyGame(arcade.Window):
         # Original location of cards we are dragging with the mouse
         # in case they have to go back
         self.held_cards_original_position = []
+
+        # ---- Create the mats the cards go on
+
+        # Sprite list with all the mats the cards lay on
+        self.pile_mat_list: arcade.SpriteList = arcade.SpriteList()
+
+        # Create the mats for the bottom face down and face up piles
+        pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        pile.position = START_X, BOTTOM_Y
+        self.pile_mat_list.append(pile)
+
+        pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+        pile.position = START_X + X_SPACING, BOTTOM_Y
+        self.pile_mat_list.append(pile)
+
+        # Create the seven middle piles
+        for i in range(7):
+            pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+            pile.position = START_X + i * X_SPACING, MIDDLE_Y
+            self.pile_mat_list.append(pile)
+
+        # Create the top "Play" piles
+
+        for i in range(4):
+            pile = arcade.SpriteSolidColor(MAT_WIDTH, MAT_HEIGHT, arcade.csscolor.DARK_OLIVE_GREEN)
+            pile.position = START_X + i * X_SPACING, TOP_Y
+            self.pile_mat_list.append(pile)
 
         # Sprite list with all the cards, no matter what pile they are in.
         self.card_list = arcade.SpriteList()
@@ -60,6 +85,9 @@ class MyGame(arcade.Window):
         """ Render the screen. """
         # Clear the screen
         self.clear()
+
+        # Draw the mats
+        self.pile_mat_list.draw()
 
         # Draw the cards
         self.card_list.draw()
@@ -90,6 +118,29 @@ class MyGame(arcade.Window):
         # If we don't have any cards do nothing
         if len(self.held_cards) == 0:
             return
+
+
+        # Find the closest pile, in case we are in contact with more than one
+        pile, distance = arcade.get_closest_sprite(self.held_cards[0], self.pile_mat_list)
+        reset_position = True
+
+        # See if we are in contact with the closest pile
+        if arcade.check_for_collision(self.held_cards[0], pile):
+
+            # For each held card, move it to the pile we dropped on
+            for i, dropped_card in enumerate(self.held_cards):
+                # Move cards to proper position
+                dropped_card.position = pile.center_x, pile.center_y
+
+            # Make sure to not reset position
+            reset_position = False
+
+            # Release on top play pile? And only one card held?
+        if reset_position:
+            # Where-ever we were dropped, it wasn't valid. Reset the card's position
+            # to its original spot
+            for pile_index, card in enumerate(self.held_cards):
+                card.position = self.held_cards_original_position[pile_index]
 
         # Drop card
         self.held_cards = []

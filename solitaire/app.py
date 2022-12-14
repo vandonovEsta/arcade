@@ -252,6 +252,12 @@ class MyGame(arcade.Window):
             card.center_x += dx
             card.center_y += dy
 
+    def on_key_press(self, symbol: int, modifiers: int):
+        """ User presses key"""
+        if symbol == arcade.key.R:
+            # Restart
+            self.setup()
+
 
 def main():
     """ Main function """

@@ -57,3 +57,6 @@ TOP_PILE_1 = 9
 TOP_PILE_2 = 10
 TOP_PILE_3 = 11
 TOP_PILE_4 = 12
+
+# Face down image
+FACE_DOWN_IMAGE = ":resources:images/cards/cardBack_red2.png"

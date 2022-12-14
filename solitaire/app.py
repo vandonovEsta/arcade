@@ -6,6 +6,7 @@ from solitaire.sprites.card_sprites import *
 import arcade
 import random
 
+
 class MyGame(arcade.Window):
     """ Main application class. """
 
@@ -89,6 +90,24 @@ class MyGame(arcade.Window):
         for card in self.card_list:
             self.piles[BOTTOM_FACE_DOWN_PILE].append(card)
 
+        # - Pull from that pile into the middle piles, all face-down
+        # Loop for each pile
+        for pile_no in range(PLAY_PILE_1, PLAY_PILE_7 + 1):
+            # Deal proper number of cards for that pile
+            for j in range(pile_no - PLAY_PILE_1 + 1):
+                # Pop the card off the deck we are dealing from
+                card = self.piles[BOTTOM_FACE_DOWN_PILE].pop()
+                # Put in the proper pile
+                self.piles[pile_no].append(card)
+                # Move card to same position as pile we just put it in
+                card.position = self.pile_mat_list[pile_no].position
+                # Put on top in draw order
+                self.pull_to_top(card)
+
+        # Flip up the top cards
+        for i in range(PLAY_PILE_1, PLAY_PILE_7 + 1):
+            self.piles[i][-1].face_up()
+
     def get_pile_for_card(self, card):
         """ Return what pile the card is in"""
         for index, pile in enumerate(self.piles):
@@ -137,12 +156,28 @@ class MyGame(arcade.Window):
             # Might be a stack of cards, get the top one
             primary_card = cards[-1]
 
-            # All other cases, grab the face-up card we are clicking on
-            self.held_cards = [primary_card]
-            # Save position
-            self.held_cards_original_position = [self.held_cards[0].position]
-            # Put on top in drawing order
-            self.pull_to_top(self.held_cards[0])
+            # Figure out what pile the card is in
+            pile_index = self.get_pile_for_card(primary_card)
+
+            if primary_card.is_face_down:
+                # Flip card if it is face down
+                primary_card.face_up()
+            else:
+
+                # All other cases, grab the face-up card we are clicking on
+                self.held_cards = [primary_card]
+                # Save position
+                self.held_cards_original_position = [self.held_cards[0].position]
+                # Put on top in drawing order
+                self.pull_to_top(self.held_cards[0])
+
+                # Is this a stack of cards? If so, grab the other cards too
+                card_index = self.piles[pile_index].index(primary_card)
+                for i in range(card_index + 1, len(self.piles[pile_index])):
+                    card = self.piles[pile_index][i]
+                    self.held_cards.append(card)
+                    self.held_cards_original_position.append(card.position)
+                    self.pull_to_top(card)
 
     def on_mouse_release(self, x: float, y: float, button: int,
                          modifiers: int):
@@ -208,7 +243,7 @@ class MyGame(arcade.Window):
 
         # We are no longer holding cards
         self.held_cards = []
-        
+
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         """ User moves mouse """
 

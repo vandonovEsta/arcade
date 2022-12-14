@@ -159,7 +159,27 @@ class MyGame(arcade.Window):
             # Figure out what pile the card is in
             pile_index = self.get_pile_for_card(primary_card)
 
-            if primary_card.is_face_down:
+            # When we click on the bottom deck, to flip three cards
+            if pile_index == BOTTOM_FACE_DOWN_PILE:
+                # Flip three cards
+                for i in range(3):
+                    # If we run out of cards, stop
+                    if len(self.piles[BOTTOM_FACE_DOWN_PILE]) == 0:
+                        break
+                    # Get top card
+                    card = self.piles[BOTTOM_FACE_DOWN_PILE][-1]
+                    # Flip face up
+                    card.face_up()
+                    # Move card position to bottom-right face up pile
+                    card.position = self.pile_mat_list[BOTTOM_FACE_UP_PILE].position
+                    # Remove card from ace down pile
+                    self.piles[BOTTOM_FACE_DOWN_PILE].remove(card)
+                    # Move card face up list
+                    self.piles[BOTTOM_FACE_UP_PILE].append(card)
+                    # Put on top draw-order wise
+                    self.pull_to_top(card)
+
+            elif primary_card.is_face_down:
                 # Flip card if it is face down
                 primary_card.face_up()
             else:
@@ -178,6 +198,25 @@ class MyGame(arcade.Window):
                     self.held_cards.append(card)
                     self.held_cards_original_position.append(card.position)
                     self.pull_to_top(card)
+
+        else:
+
+            # Click on a mat instead of a card?
+            mats = arcade.get_sprites_at_point((x, y), self.pile_mat_list)
+
+            if len(mats) > 0:
+                mat = mats[0]
+                mat_index = self.pile_mat_list.index(mat)
+
+                # Is it out turned over flip mat? and no cards on it?
+                if mat_index == BOTTOM_FACE_DOWN_PILE and len(self.piles[BOTTOM_FACE_DOWN_PILE]) == 0:
+                    # Flip the deck back over so we can restart
+                    temp_list = self.piles[BOTTOM_FACE_DOWN_PILE].copy()
+                    for card in reversed(temp_list):
+                        card.face_down()
+                        self.piles[BOTTOM_FACE_UP_PILE].remove(card)
+                        self.piles[BOTTOM_FACE_DOWN_PILE].append(card)
+                        card.position = self.pile_mat_list[BOTTOM_FACE_DOWN_PILE].position
 
     def on_mouse_release(self, x: float, y: float, button: int,
                          modifiers: int):

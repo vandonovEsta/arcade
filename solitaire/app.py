@@ -4,7 +4,7 @@ Solitaire clone.
 from solitaire.constants.card_constants import *
 from solitaire.sprites.card_sprites import *
 import arcade
-
+import random
 
 class MyGame(arcade.Window):
     """ Main application class. """
@@ -73,6 +73,11 @@ class MyGame(arcade.Window):
                 card = Card(card_suit, card_value, CARD_SCALE)
                 card.position = START_X, BOTTOM_Y
                 self.card_list.append(card)
+
+        # Shuffle the cards
+        for pos1 in range(len(self.card_list)):
+            pos2 = random.randrange(len(self.card_list))
+            self.card_list.swap(pos1, pos2)
 
     def pull_to_top(self, card: arcade.Sprite):
         """ Pull card to top of rendering order (last to render, looks on-top) """
